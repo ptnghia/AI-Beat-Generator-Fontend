@@ -11,6 +11,9 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useCartStore } from '@/lib/stores/cart-store';
 import { checkoutSchema, type CheckoutFormData } from '@/lib/schemas/checkout-schema';
+import { toast } from 'sonner';
+import axios from 'axios';
+import { API_CONFIG } from '@/lib/config';
 import Link from 'next/link';
 
 export default function CheckoutPage() {
@@ -51,22 +54,37 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Process payment
+    // Process payment with Stripe
     setIsProcessing(true);
 
     try {
-      // TODO: Integrate with Stripe payment API
-      // Simulate payment processing with customer data
-      console.log('Processing order for:', data.email);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Prepare items for Stripe checkout
+      const checkoutItems = items.map(item => ({
+        beatId: item.beat.id,
+        tier: item.selectedTier.tier.toLowerCase().replace(/\s+/g, '_'),
+        price: item.selectedTier.price * item.quantity
+      }));
 
-      // Clear cart
-      clearCart();
+      // Create Stripe checkout session
+      const response = await axios.post(`${API_CONFIG.BASE_URL}/api/payments/create-checkout-session`, {
+        items: checkoutItems,
+        email: data.email,
+        successUrl: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${window.location.origin}/checkout`
+      });
 
-      // Redirect to success page
-      router.push('/checkout/success');
-    } catch (error) {
+      const { url } = response.data;
+
+      if (!url) {
+        throw new Error('Failed to create checkout session');
+      }
+
+      // Redirect to Stripe checkout
+      window.location.href = url;
+
+    } catch (error: any) {
       console.error('Payment failed:', error);
+      toast.error(error.response?.data?.message || 'Failed to process payment. Please try again.');
       setIsProcessing(false);
     }
   };

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import type { Beat } from '@/lib/types';
 import Image from 'next/image';
-import { API_CONFIG } from '@/lib/config';
+import { getFullImageUrl, getFullAudioUrl } from '@/lib/utils/url';
 
 interface AudioPlayerProps {
   beat: Beat | null;
@@ -44,9 +44,7 @@ export function AudioPlayer({ beat, onClose }: AudioPlayerProps) {
       howlRef.current.unload();
     }
 
-    const audioUrl = beat.previewPath 
-      ? `${API_CONFIG.BASE_URL}/${beat.previewPath}`
-      : `${API_CONFIG.BASE_URL}/${beat.filePath}`;
+    const audioUrl = getFullAudioUrl(beat.previewPath || beat.filePath) || '';
 
     howlRef.current = new Howl({
       src: [audioUrl],
@@ -140,9 +138,7 @@ export function AudioPlayer({ beat, onClose }: AudioPlayerProps) {
 
   if (!beat) return null;
 
-  const coverUrl = beat.coverArtPath 
-    ? `${API_CONFIG.BASE_URL}/${beat.coverArtPath}`
-    : '/placeholder-cover.png';
+const coverUrl = getFullImageUrl(beat.coverArtPath);
 
   return (
     <Card className="fixed bottom-0 left-0 right-0 z-50 rounded-t-lg border-t shadow-lg">

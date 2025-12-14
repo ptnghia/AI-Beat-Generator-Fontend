@@ -1,12 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Search, Music, Edit, Trash2, ExternalLink } from 'lucide-react';
+import { Search, Music, Edit, Trash2, ExternalLink, Info, Upload } from 'lucide-react';
 import axios from 'axios';
 import { API_CONFIG } from '@/lib/config';
 import { Beat } from '@/lib/types';
+import { getFullImageUrl } from '@/lib/utils/url';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { BeatStarsDetailModal } from '@/components/admin/BeatStarsDetailModal';
+import FileUploadModal from '@/components/admin/FileUploadModal';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -15,6 +19,10 @@ export default function AdminBeatsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [selectedBeat, setSelectedBeat] = useState<Beat | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [uploadBeat, setUploadBeat] = useState<Beat | null>(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchBeats = async () => {
@@ -54,6 +62,28 @@ export default function AdminBeatsPage() {
     } catch (err) {
       console.error('Failed to delete beat:', err);
       alert('Failed to delete beat');
+    }
+  };
+
+  const handleViewDetails = (beat: Beat) => {
+    setSelectedBeat(beat);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleUploadFiles = (beat: Beat) => {
+    setUploadBeat(beat);
+    setIsUploadModalOpen(true);
+  };
+
+  const handleUploadSuccess = async () => {
+    // Refresh beats list after upload
+    try {
+      const response = await axios.get<{ data: Beat[] }>(
+        `${API_CONFIG.BASE_URL}/api/beats`
+      );
+      setBeats(response.data.data || []);
+    } catch (err) {
+      console.error('Failed to refresh beats:', err);
     }
   };
 
@@ -133,7 +163,7 @@ export default function AdminBeatsPage() {
                       <div className="relative w-12 h-12 rounded overflow-hidden bg-muted">
                         {beat.coverArtPath ? (
                           <Image
-                              src={`${API_CONFIG.BASE_URL}/${beat.coverArtPath}`}
+                              src={getFullImageUrl(beat.coverArtPath)}
                             alt={beat.name}
                             fill
                             className="object-cover"
@@ -146,10 +176,19 @@ export default function AdminBeatsPage() {
                       </div>
                     </td>
                     <td className="p-4">
-                      <p className="font-medium">{beat.name}</p>
-                      {beat.style && (
-                        <p className="text-sm text-muted-foreground">{beat.style}</p>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <div>
+                          <p className="font-medium">{beat.name}</p>
+                          {beat.style && (
+                            <p className="text-sm text-muted-foreground">{beat.style}</p>
+                          )}
+                        </div>
+                        {beat.generationStatus === 'pending' && !beat.fileUrl && (
+                          <Badge variant="outline" className="text-xs">
+                            Metadata Only
+                          </Badge>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
@@ -164,6 +203,28 @@ export default function AdminBeatsPage() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
+                        {/* Upload button for Metadata Only beats */}
+                        {beat.generationStatus === 'pending' && !beat.fileUrl && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => handleUploadFiles(beat)}
+                            aria-label={`Upload files for ${beat.name}`}
+                            title="Upload MP3/WAV/Cover"
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <Upload className="w-4 h-4" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewDetails(beat)}
+                          aria-label={`View BeatStars details for ${beat.name}`}
+                          title="BeatStars Upload Info"
+                        >
+                          <Info className="w-4 h-4" />
+                        </Button>
                         <Link href={`/beats/${beat.id}`} target="_blank">
                           <Button variant="ghost" size="sm" aria-label={`View ${beat.name}`}>
                             <ExternalLink className="w-4 h-4" />
@@ -199,6 +260,29 @@ export default function AdminBeatsPage() {
       <div className="text-sm text-muted-foreground">
         Showing {filteredBeats.length} of {beats.length} beats
       </div>
+
+      {/* BeatStars Detail Modal */}
+      <BeatStarsDetailModal
+        beat={selectedBeat}
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedBeat(null);
+        }}
+      />
+
+      {/* File Upload Modal */}
+      {uploadBeat && (
+        <FileUploadModal
+          beat={uploadBeat}
+          isOpen={isUploadModalOpen}
+          onClose={() => {
+            setIsUploadModalOpen(false);
+            setUploadBeat(null);
+          }}
+          onSuccess={handleUploadSuccess}
+        />
+      )}
     </div>
   );
 }

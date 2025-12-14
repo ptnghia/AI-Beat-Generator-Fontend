@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { useCartStore } from '@/lib/stores/cart-store';
-import { API_CONFIG } from '@/lib/config';
+import { getFullImageUrl } from '@/lib/utils/url';
 
 export function CartDrawer() {
   const { items, subtotal, tax, total, getItemCount, removeItem, updateQuantity } =
@@ -65,7 +65,7 @@ export function CartDrawer() {
                   <div className="relative w-20 h-20 shrink-0 rounded overflow-hidden bg-muted">
                     {item.beat.coverArtPath ? (
                       <Image
-                        src={`${API_CONFIG.BASE_URL}/${item.beat.coverArtPath}`}
+                        src={getFullImageUrl(item.beat.coverArtPath)}
                         alt={item.beat.name}
                         fill
                         className="object-cover"

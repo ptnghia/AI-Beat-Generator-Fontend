@@ -58,6 +58,8 @@ export const useAdminAuthStore = create<AdminAuthStore>()(
         if (token) {
           // Set token in axios headers if exists
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          // Also ensure isAuthenticated is true
+          set({ isAuthenticated: true });
         }
       },
     }),
@@ -69,6 +71,12 @@ export const useAdminAuthStore = create<AdminAuthStore>()(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        // After rehydration, restore axios headers if token exists
+        if (state?.token) {
+          axios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
+        }
+      },
     }
   )
 );

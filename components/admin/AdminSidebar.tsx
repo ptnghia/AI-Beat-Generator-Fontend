@@ -10,6 +10,9 @@ import {
   LogOut,
   Menu,
   X,
+  Sparkles,
+  Clock,
+  Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAdminAuthStore } from '@/lib/stores/admin-auth-store';
@@ -18,6 +21,9 @@ import { useState } from 'react';
 const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Beats', href: '/admin/beats', icon: Music },
+  { name: 'Generate', href: '/admin/beats/generate', icon: Sparkles },
+  { name: 'Pending', href: '/admin/beats/pending', icon: Clock },
+  { name: 'BeatStars', href: '/admin/beats/beatstars', icon: Upload },
   { name: 'API Keys', href: '/admin/keys', icon: Key },
   { name: 'Logs', href: '/admin/logs', icon: FileText },
 ];

@@ -25,10 +25,10 @@ export default function AdminKeysPage() {
   useEffect(() => {
     const fetchKeys = async () => {
       try {
-        const response = await axios.get<ApiKey[]>(
+        const response = await axios.get<{success: boolean; data: ApiKey[]}>(
           `${API_CONFIG.BASE_URL}/api/admin/keys`
         );
-        setKeys(response.data);
+        setKeys(response.data.data || []);
       } catch (err) {
         console.error('Failed to fetch API keys:', err);
         setError('Failed to load API keys');
@@ -107,6 +107,34 @@ export default function AdminKeysPage() {
           {[...Array(5)].map((_, i) => (
             <div key={i} className="h-16 bg-muted rounded mb-2" />
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">API Key Management</h1>
+        <div className="border border-destructive rounded-lg p-6">
+          <div className="flex items-center gap-2 text-destructive mb-2">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <h3 className="font-semibold">Backend API Unavailable</h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            The backend endpoint <code className="bg-muted px-1 py-0.5 rounded">/api/admin/keys</code> is not implemented yet.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Backend team needs to implement:
+          </p>
+          <ul className="text-sm text-muted-foreground list-disc list-inside mt-2 space-y-1">
+            <li><code className="bg-muted px-1 py-0.5 rounded">GET /api/admin/keys</code> - List API keys</li>
+            <li><code className="bg-muted px-1 py-0.5 rounded">POST /api/admin/keys</code> - Add new key</li>
+            <li><code className="bg-muted px-1 py-0.5 rounded">PATCH /api/admin/keys/:id</code> - Update key</li>
+            <li><code className="bg-muted px-1 py-0.5 rounded">DELETE /api/admin/keys/:id</code> - Delete key</li>
+          </ul>
         </div>
       </div>
     );

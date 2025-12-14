@@ -6,8 +6,28 @@ const nextConfig: NextConfig = {
       {
         protocol: 'http',
         hostname: 'localhost',
-        port: '3000',
+        port: '4000',
         pathname: '/output/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'beat.optiwellai.com',
+        pathname: '/output/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'optiwellai.com',
+        pathname: '/output/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'optiwellai.com',
+        pathname: '/api/output/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn1.suno.ai',
+        pathname: '/**',
       },
     ],
     formats: ['image/avif', 'image/webp'],

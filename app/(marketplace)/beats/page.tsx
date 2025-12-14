@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Grid, List, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { useBeats } from '@/lib/hooks/useBeats';
@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/sheet';
 import type { Beat } from '@/lib/types';
 
-export default function BeatsPage() {
+function BeatsPageContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -225,5 +225,13 @@ export default function BeatsPage() {
 
       <AudioPlayer beat={currentBeat} onClose={() => setCurrentBeat(null)} />
     </div>
+  );
+}
+
+export default function BeatsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <BeatsPageContent />
+    </Suspense>
   );
 }

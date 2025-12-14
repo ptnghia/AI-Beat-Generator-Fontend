@@ -27,14 +27,19 @@ export default function AdminLogsPage() {
 
   const fetchLogs = async () => {
     try {
-      const response = await axios.get<LogEntry[]>(
+      const response = await axios.get<{ data?: LogEntry[] } | LogEntry[]>(
         `${API_CONFIG.BASE_URL}/api/admin/logs`
       );
-      setLogs(response.data);
+      // Handle both array and object responses
+      const logsData = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data as any)?.data || [];
+      setLogs(Array.isArray(logsData) ? logsData : []);
       setError(null);
     } catch (err) {
       console.error('Failed to fetch logs:', err);
       setError('Failed to load logs');
+      setLogs([]);
     } finally {
       setIsLoading(false);
     }
@@ -54,13 +59,13 @@ export default function AdminLogsPage() {
     return () => clearInterval(interval);
   }, [autoRefresh]);
 
-  const filteredLogs = logs.filter((log) => {
+  const filteredLogs = Array.isArray(logs) ? logs.filter((log) => {
     const matchesSearch =
       log.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
       log.details?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesLevel = levelFilter === 'all' || log.level === levelFilter;
     return matchesSearch && matchesLevel;
-  });
+  }) : [];
 
   const getLevelIcon = (level: string) => {
     switch (level) {
@@ -112,9 +117,9 @@ export default function AdminLogsPage() {
     );
   }
 
-  const errorCount = logs.filter((l) => l.level === 'ERROR').length;
-  const warnCount = logs.filter((l) => l.level === 'WARN').length;
-  const infoCount = logs.filter((l) => l.level === 'INFO').length;
+  const errorCount = Array.isArray(logs) ? logs.filter((l) => l.level === 'ERROR').length : 0;
+  const warnCount = Array.isArray(logs) ? logs.filter((l) => l.level === 'WARN').length : 0;
+  const infoCount = Array.isArray(logs) ? logs.filter((l) => l.level === 'INFO').length : 0;
 
   return (
     <div className="space-y-6">

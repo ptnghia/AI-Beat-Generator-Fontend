@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Beat, PricingTier } from '@/lib/types';
-import { API_CONFIG } from '@/lib/config';
+import { getFullImageUrl } from '@/lib/utils/url';
 
 interface BeatCardProps {
   beat: Beat;
@@ -15,9 +15,7 @@ interface BeatCardProps {
 }
 
 export function BeatCard({ beat, onPlay }: BeatCardProps) {
-  const coverUrl = beat.coverArtPath 
-    ? `${API_CONFIG.BASE_URL}/${beat.coverArtPath}`
-    : '/placeholder-cover.png';
+  const coverUrl = getFullImageUrl(beat.coverArtPath);
 
   const mp3PriceTag = beat.pricing?.find((p: PricingTier) => p.licenseType === 'MP3 Lease');
   const wavPriceTag = beat.pricing?.find((p: PricingTier) => p.licenseType === 'WAV Lease');

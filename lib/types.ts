@@ -15,8 +15,13 @@ export interface Beat {
   musicalKey?: string;
   duration?: number;
   filePath: string;
+  fileUrl?: string; // Suno CDN URL or uploaded file path
+  audioPath?: string;
+  audioUrl?: string;
   coverArtPath?: string;
   previewPath?: string;
+  wavPath?: string;
+  wavUrl?: string;
   beatstarsTitle?: string;
   beatstarsTags?: string[];
   beatstarsDescription?: string;
@@ -24,12 +29,18 @@ export interface Beat {
   basePrompt?: string;
   normalizedPrompt?: string;
   conceptData?: ConceptData;
+  modelName?: string;
+  sunoTaskId?: string;
+  sunoAudioId?: string;
+  generationStatus?: 'pending' | 'processing' | 'completed' | 'failed';
+  wavConversionStatus?: 'not_started' | 'processing' | 'completed' | 'failed';
   createdAt: string;
   updatedAt: string;
 }
 
 export interface PricingTier {
   tier: string;
+  name?: string;
   licenseType?: string;
   price: number;
   description: string;
@@ -108,5 +119,109 @@ export interface AdminUser {
   username: string;
   email: string;
   role: 'admin' | 'super_admin';
+  createdAt: string;
+}
+
+// Beat Generation Types
+export interface BeatTemplate {
+  id: string;
+  categoryName: string;
+  genre: string;
+  style: string;
+  mood: string;
+  useCase: string;
+  description: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface GenerationRequest {
+  templateId?: string;
+  categoryName?: string;
+  mode: 'full' | 'metadata_only';
+  count?: number;
+}
+
+export interface GenerationQueueItem {
+  beatId: string;
+  name: string;
+  genre: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  mode: 'full' | 'metadata_only';
+  createdAt: string;
+  error?: string;
+}
+
+export interface GenerationResponse {
+  success: boolean;
+  beat?: Beat;
+  beats?: Beat[];
+  message: string;
+}
+
+// Beat Versions
+export interface BeatVersion {
+  id: string;
+  beatId: string;
+  versionNumber: number;
+  isPrimary: boolean;
+  audioUrl?: string;
+  audioPathLocal?: string;
+  duration?: number;
+  modelName?: string;
+  source: 'suno' | 'suno_retry' | 'upload';
+  sunoTaskId?: string;
+  createdAt: string;
+}
+
+export interface BeatVersionsResponse {
+  beatId: string;
+  totalVersions: number;
+  versions: BeatVersion[];
+}
+
+// BeatStars Integration
+export interface BeatStarsReadiness {
+  id: string;
+  name: string;
+  genre: string;
+  beatstarsTitle: string;
+  hasWav: boolean;
+  hasCover: boolean;
+  hasMp3: boolean;
+  tagCount: number;
+  descriptionLength: number;
+  isReady: boolean;
+  missingItems: string[];
+  metadata: {
+    bpm?: number;
+    musicalKey?: string;
+    tags: string[];
+    pricing: PricingTier[];
+  };
+}
+
+export interface BeatStarsChecklist {
+  beatId: string;
+  beatName: string;
+  isReady: boolean;
+  items: ChecklistItem[];
+}
+
+export interface ChecklistItem {
+  item: string;
+  required: boolean;
+  completed: boolean;
+  details: any;
+}
+
+// Pending Beats
+export interface PendingBeat {
+  id: string;
+  name: string;
+  genre: string;
+  mood: string;
+  templateId?: string;
+  generationStatus: 'pending';
   createdAt: string;
 }

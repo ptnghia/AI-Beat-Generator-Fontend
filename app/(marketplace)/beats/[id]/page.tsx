@@ -8,22 +8,43 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBeat } from '@/lib/hooks/useBeat';
-import { API_CONFIG } from '@/lib/config';
+import { getFullImageUrl, getFullAudioUrl } from '@/lib/utils/url';
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { EnhancedAudioPlayer } from '@/components/EnhancedAudioPlayer';
 import { PricingComparison } from '@/components/beat/PricingComparison';
 import { RelatedBeatsCarousel } from '@/components/beat/RelatedBeatsCarousel';
 import { SocialShareButtons } from '@/components/beat/SocialShareButtons';
+import { VersionSwitcher } from '@/components/beat/VersionSwitcher';
 import { useBeats } from '@/lib/hooks/useBeats';
 import { useCartStore } from '@/lib/stores/cart-store';
 import { PricingTier } from '@/lib/types';
+import { getBeatVersions, BeatVersion } from '@/lib/api/versions';
 
 export default function BeatDetailPage() {
   const params = useParams();
   const beatId = params.id as string;
   const { data: beat, isLoading, error } = useBeat(beatId);
   const [showPlayer, setShowPlayer] = useState(false);
+  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const { addItem } = useCartStore();
+
+  // Fetch versions
+  const { data: versions = [] } = useQuery({
+    queryKey: ['beatVersions', beatId],
+    queryFn: () => getBeatVersions(beatId),
+    enabled: !!beatId,
+  });
+
+  // Get current version (selected or primary)
+  const currentVersion = selectedVersionId
+    ? versions.find((v) => v.id === selectedVersionId)
+    : versions.find((v) => v.isPrimary) || versions[0];
+
+  // Use version audio if available, otherwise use beat audio
+  const audioUrl = currentVersion?.audioUrl ||
+    (currentVersion?.audioPath ? getFullAudioUrl(currentVersion.audioPath) : null) ||
+    (beat?.audioUrl || (beat?.audioPath ? getFullAudioUrl(beat.audioPath) : null));
 
   // Fetch related beats (same genre, limit 6)
   const { data: relatedBeatsData } = useBeats({
@@ -62,9 +83,7 @@ export default function BeatDetailPage() {
     );
   }
 
-  const coverUrl = beat.coverArtPath
-    ? `${API_CONFIG.BASE_URL}/${beat.coverArtPath}`
-    : '/placeholder-cover.jpg';
+  const coverUrl = getFullImageUrl(beat.coverArtPath);
 
   const handlePlayClick = () => {
     setShowPlayer(true);
@@ -150,6 +169,17 @@ export default function BeatDetailPage() {
             {/* Title & Metadata */}
             <div>
               <h1 className="text-4xl font-bold mb-4">{beat.name}</h1>
+              
+              {/* Version Switcher */}
+              {versions.length > 1 && (
+                <div className="mb-4">
+                  <VersionSwitcher
+                    versions={versions}
+                    currentVersionId={currentVersion?.id || versions[0]?.id}
+                    onVersionChange={setSelectedVersionId}
+                  />
+                </div>
+              )}
               
               {/* Genre & Mood Badges */}
               <div className="flex flex-wrap gap-2 mb-4">
@@ -246,8 +276,11 @@ export default function BeatDetailPage() {
       </div>
 
       {/* Audio Player */}
-      {showPlayer && beat && (
-        <EnhancedAudioPlayer beat={beat} onClose={() => setShowPlayer(false)} />
+      {showPlayer && beat && audioUrl && (
+        <EnhancedAudioPlayer 
+          beat={{ ...beat, audioUrl }} 
+          onClose={() => setShowPlayer(false)} 
+        />
       )}
     </div>
   );
